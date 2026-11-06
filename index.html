@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shape Motion Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;900&family=Archivo:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;700&family=Syne:wght@400;500;700;800&family=DM+Serif+Display&family=Noto+Sans+KR:wght@400;500;700;900&family=Black+Han+Sans&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=3">
+</head>
+<body>
+
+<!-- ===== 상단 바 ===== -->
+<header class="topbar">
+  <div class="logo" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="4.5"/><rect x="12.5" y="12.5" width="8" height="8" rx="1"/><path d="M14 4l5 0 0 5" fill="none" stroke-width="2"/></svg>
+  </div>
+  <div class="doc-title">Shape Motion Generator <span>animation draft tool</span></div>
+  <div class="top-icons">
+    <button class="icon-btn" id="pngBtn" title="현재 프레임 PNG 저장">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4.5 3.5"/></svg>
+    </button>
+    <button class="icon-btn" id="fullBtn" title="캔버스 크게 보기">
+      <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+  </div>
+  <button class="export-btn" id="recBtn">
+    <svg viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 13v6.5h14V13"/></svg>
+    <span id="recLabel">영상 내보내기</span>
+  </button>
+</header>
+
+<main class="layout">
+  <!-- ===== 캔버스 영역 ===== -->
+  <section class="stage-wrap">
+    <div class="canvas-bar">
+      <div class="cb-left">
+        <label class="ratio-pick" title="캔버스 비율">
+          <svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="1.5"/></svg>
+          <select data-bind="ratio">
+            <option value="16:9">16:9</option>
+            <option value="6:4">6:4</option>
+            <option value="3:4">3:4</option>
+            <option value="4:5">4:5</option>
+            <option value="9:16">9:16</option>
+            <option value="1:1">1:1</option>
+          </select>
+        </label>
+        <span class="zoom" id="zoomLabel">100%</span>
+        <span class="dim" id="dimLabel">1920 × 1080</span>
+      </div>
+      <button class="play" id="playBtn" aria-label="재생/일시정지" title="재생/일시정지 (스페이스바)">
+        <svg class="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="3.5" height="14" rx="0.8"/><rect x="14" y="5" width="3.5" height="14" rx="0.8"/></svg>
+        <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+      </button>
+    </div>
+
+    <div class="stage" id="stage">
+      <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="timeline">
+      <input type="range" id="scrub" min="0" max="1" step="0.001" value="0">
+      <div class="time" id="timeLabel">0.0 / 6.0초</div>
+    </div>
+    <div class="hint">캔버스를 드래그하면 카피가 움직여요 · 스페이스바로 재생/정지</div>
+  </section>
+
+  <!-- ===== 오른쪽 설정 패널 ===== -->
+  <aside class="inspector">
+    <div class="ctl-head">
+      <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+      <span id="panelTitle">그래픽</span>
+      <button class="icon-btn sm" id="resetBtn" title="전체 초기화">
+        <svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2.2-5.1M5 4v4h4"/></svg>
+      </button>
+    </div>
+
+    <!-- 그래픽 -->
+    <div class="panel" data-panel="graphic">
+      <section class="sec">
+        <button class="sec-head">기본 도형<i></i></button>
+        <div class="sec-body">
+          <div class="shape-grid" id="shapeGrid"></div>
+          <button class="btn-line" id="svgBtn">
+            <svg viewBox="0 0 24 24"><path d="M12 16V5M7.5 9.5L12 5l4.5 4.5M5 15v4.5h14V15"/></svg>SVG 파일 업로드
+          </button>
+          <input type="file" id="svgInput" accept=".svg,image/svg+xml" multiple hidden>
+          <p class="foot">여러 개를 한 번에 올릴 수 있어요. 레이어마다 단색으로 칠하거나 원본 색을 유지할 수 있어요.</p>
+        </div>
+      </section>
+      <section class="sec">
+        <button class="sec-head">레이어<i></i></button>
+        <div class="sec-body"><div id="graphicList"></div></div>
+      </section>
+    </div>
+
+    <!-- 카피 -->
+    <div class="panel" data-panel="copy" hidden>
+      <section class="sec">
+        <button class="sec-head">문구<i></i></button>
+        <div class="sec-body">
+          <textarea data-bind="text.content" rows="3" placeholder="카피를 입력하세요. 줄바꿈은 Enter."></textarea>
+        </div>
+      </section>
+      <section class="sec">
+        <button class="sec-head">서체<i></i></button>
+        <div class="sec-body">
+          <div class="row"><label>폰트</label><div class="ctl"><select class="pop" data-bind="text.font" id="fontSelect"></select></div></div>
+          <div class="row stack"><label>굵기</label>
+            <div class="segmented full" data-bind="text.weight" data-num>
+              <button data-v="400">Regular</button><button data-v="500">Medium</button>
+              <button data-v="700">Bold</button><button data-v="900">Black</button>
+            </div>
+          </div>
+          <div class="row"><label>글자 색</label><div class="ctl"><input class="hex" data-hex="text.color"><input type="color" data-bind="text.color"></div></div>
+          <button class="btn-line" id="fontBtn">폰트 파일 불러오기 (.ttf .otf .woff)</button>
+          <input type="file" id="fontInput" accept=".ttf,.otf,.woff,.woff2" hidden>
+        </div>
+      </section>
+      <section class="sec">
+        <button class="sec-head">크기와 간격<i></i></button>
+        <div class="sec-body">
+          <div class="row"><label>크기 px</label><div class="ctl"><input type="range" data-bind="text.size" min="16" max="600" step="1"><input class="num" type="number" data-bind="text.size" min="16" max="600" step="1"></div></div>
+          <div class="row"><label>행간</label><div class="ctl"><input type="range" data-bind="text.lineHeight" min="0.6" max="2" step="0.01"><input class="num" type="number" data-bind="text.lineHeight" min="0.6" max="2" step="0.01"></div></div>
+          <div class="row"><label>자간</label><div class="ctl"><input type="range" data-bind="text.tracking" min="-150" max="400" step="5"><input class="num" type="number" data-bind="text.tracking" min="-150" max="400" step="5"></div></div>
+        </div>
+      </section>
+      <section class="sec">
+        <button class="sec-head">정렬과 위치<i></i></button>
+        <div class="sec-body">
+          <div class="row stack"><label>정렬</label>
+            <div class="segmented full" data-bind="text.align">
+              <button data-v="left">왼쪽</button><button data-v="center">가운데</button><button data-v="right">오른쪽</button>
+            </div>
+          </div>
+          <div class="row"><label>가로 %</label><div class="ctl"><input type="range" data-bind="text.x" min="0" max="100" step="0.5"><input class="num" type="number" data-bind="text.x" min="0" max="100" step="0.5"></div></div>
+          <div class="row"><label>세로 %</label><div class="ctl"><input type="range" data-bind="text.y" min="0" max="100" step="0.5"><input class="num" type="number" data-bind="text.y" min="0" max="100" step="0.5"></div></div>
+          <p class="foot">캔버스를 직접 드래그해도 위치가 바뀌어요.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 배경 -->
+    <div class="panel" data-panel="bg" hidden>
+      <section class="sec">
+        <button class="sec-head">배경 종류<i></i></button>
+        <div class="sec-body">
+          <div class="segmented full" data-bind="bg.mode">
+            <button data-v="solid">단색</button><button data-v="gradient">그라디언트</button><button data-v="image">이미지</button>
+          </div>
+          <div class="row" data-show="bg.mode:solid,image"><label>배경 색</label><div class="ctl"><input class="hex" data-hex="bg.color"><input type="color" data-bind="bg.color"></div></div>
+        </div>
+      </section>
+
+      <section class="sec" data-show="bg.mode:gradient">
+        <button class="sec-head">그라디언트<i></i></button>
+        <div class="sec-body">
+          <div class="segmented full" data-bind="bg.gtype">
+            <button data-v="linear">선형</button><button data-v="radial">원형</button>
+          </div>
+          <div class="row"><label>시작 색</label><div class="ctl"><input class="hex" data-hex="bg.g1"><input type="color" data-bind="bg.g1"></div></div>
+          <div class="row"><label>끝 색</label><div class="ctl"><input class="hex" data-hex="bg.g2"><input type="color" data-bind="bg.g2"></div></div>
+          <div class="row" data-show="bg.gtype:linear"><label>각도 °</label><div class="ctl"><input type="range" data-bind="bg.angle" min="0" max="360" step="1"><input class="num" type="number" data-bind="bg.angle" min="0" max="360" step="1"></div></div>
+          <button class="btn-line" id="swapGrad">색 순서 바꾸기</button>
+        </div>
+      </section>
+
+      <section class="sec" data-show="bg.mode:image">
+        <button class="sec-head">배경 이미지<i></i></button>
+        <div class="sec-body">
+          <button class="btn-line" id="bgBtn">이미지 업로드</button>
+          <input type="file" id="bgInput" accept="image/*" hidden>
+          <div class="row"><label>파일</label><div class="ctl"><span class="muted" id="bgName">없음</span></div></div>
+          <div class="segmented full" data-bind="bg.fit">
+            <button data-v="cover">꽉 채우기</button><button data-v="contain">전체 보이기</button>
+          </div>
+          <p class="foot">이미지는 새로고침하면 다시 올려야 해요. 비는 부분은 배경 색으로 채워져요.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 모션 -->
+    <div class="panel" data-panel="motion" hidden>
+      <section class="sec">
+        <button class="sec-head">애니메이션<i></i></button>
+        <div class="sec-body">
+          <div class="row"><label>길이 (초)</label><div class="ctl"><input type="range" data-bind="duration" min="1" max="20" step="0.5"><input class="num" type="number" data-bind="duration" min="1" max="20" step="0.5"></div></div>
+          <div class="row"><label>반복 속도</label><div class="ctl">
+            <div class="segmented" data-bind="motion.cycles" data-num>
+              <button data-v="1">1×</button><button data-v="2">2×</button><button data-v="3">3×</button><button data-v="4">4×</button>
+            </div></div></div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <button class="sec-head">그래픽 움직임<i></i></button>
+        <div class="sec-body">
+          <div class="row"><label>방식</label><div class="ctl">
+            <select class="pop" data-bind="motion.mode">
+              <option value="grid">그리드 반복</option>
+              <option value="drift">떠다니기</option>
+              <option value="sweep">가로지르기</option>
+              <option value="fall">떨어지기</option>
+              <option value="orbit">카피 주위 돌기</option>
+              <option value="letters">글자 따라 점프</option>
+              <option value="pulse">제자리 숨쉬기</option>
+            </select></div></div>
+          <div class="row"><label>강도 %</label><div class="ctl"><input type="range" data-bind="motion.amount" min="0" max="100" step="1"><input class="num" type="number" data-bind="motion.amount" min="0" max="100" step="1"></div></div>
+          <div class="row"><label>회전</label><div class="ctl"><input type="checkbox" class="switch" data-bind="motion.spin"></div></div>
+          <div class="row stack"><label>겹칠 때</label>
+            <div class="segmented full" data-bind="motion.layer">
+              <button data-v="xor">색 반전</button><button data-v="text">카피가 위</button><button data-v="graphic">그래픽이 위</button>
+            </div>
+          </div>
+          <button class="btn-dark" id="shuffleBtn">배치 다시 섞기</button>
+        </div>
+      </section>
+
+      <section class="sec">
+        <button class="sec-head">카피 움직임<i></i></button>
+        <div class="sec-body">
+          <div class="row"><label>방식</label><div class="ctl">
+            <select class="pop" data-bind="textMotion.mode">
+              <option value="none">없음</option>
+              <option value="repel">그래픽에 밀려나기</option>
+              <option value="spread">흩어졌다 모이기</option>
+              <option value="wave">물결</option>
+              <option value="pulse">크기 펄스</option>
+              <option value="outline">외곽선 깜빡임</option>
+              <option value="type">타이핑 등장</option>
+            </select></div></div>
+          <div class="row"><label>강도 %</label><div class="ctl"><input type="range" data-bind="textMotion.amount" min="0" max="100" step="1"><input class="num" type="number" data-bind="textMotion.amount" min="0" max="100" step="1"></div></div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <button class="sec-head">화면 효과<i></i></button>
+        <div class="sec-body">
+          <div class="row"><label>메인 효과</label><div class="ctl"><select class="pop fx-select" data-bind="effect.mode"></select></div></div>
+          <div class="row"><label>강도 %</label><div class="ctl"><input type="range" data-bind="effect.amount" min="0" max="100" step="1"><input class="num" type="number" data-bind="effect.amount" min="0" max="100" step="1"></div></div>
+          <div class="row"><label>보조 효과</label><div class="ctl"><select class="pop fx-select" data-bind="effect.mode2"></select></div></div>
+          <div class="row" data-hide="effect.mode2:none"><label>강도 %</label><div class="ctl"><input type="range" data-bind="effect.amount2" min="0" max="100" step="1"><input class="num" type="number" data-bind="effect.amount2" min="0" max="100" step="1"></div></div>
+          <button class="btn-dark" id="fxRandom">추천 조합 랜덤으로 적용</button>
+          <p class="foot">보조 효과는 메인 효과 위에 한 번 더 겹쳐져요. 효과는 그래픽과 카피에만 적용돼요.</p>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <!-- ===== 맨 오른쪽 아이콘 레일 (탭) ===== -->
+  <nav class="rail" id="tabSeg">
+    <button data-v="graphic" class="on" title="그래픽">
+      <svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="4"/><rect x="13" y="13" width="7" height="7" rx="1"/><path d="M16.5 3.5l3.5 6h-7z"/></svg><span>그래픽</span>
+    </button>
+    <button data-v="copy" title="카피">
+      <svg viewBox="0 0 24 24"><path d="M5 6V4.5h14V6M12 4.5v15M9 19.5h6"/></svg><span>카피</span>
+    </button>
+    <button data-v="bg" title="배경">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 15l5-4 4 3 3-2 5 4"/></svg><span>배경</span>
+    </button>
+    <button data-v="motion" title="모션">
+      <svg viewBox="0 0 24 24"><path d="M3 12c2.5-6 5.5-6 8 0s5.5 6 8 0"/><circle cx="20" cy="9" r="1.2"/></svg><span>모션</span>
+    </button>
+  </nav>
+</main>
+
+<div class="toast" id="toast" hidden></div>
+
+<!-- 녹아내림 효과용 필터 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="goo" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11"/>
+  </filter>
+</svg>
+
+<script src="app.js?v=3"></script>
+</body>
+</html>
