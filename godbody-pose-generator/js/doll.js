@@ -1,5 +1,5 @@
 /* ===== a GESTALTA-style wooden artist's mannequin, dressed onto the figure's skeleton =====
-   Faceless egg head, a peg neck, chest / abdomen / pelvis blocks with ball joints between them,
+   Faceless egg head, a peg neck, an upper body and a pelvis meeting at a ball joint at the waist,
    ball joints at shoulders, elbows, wrists, hips, knees and ankles, tapered limbs, mitten hands and wedge feet.
    It shares the brand body's bones, so a pose here is exactly the pose Apply draws. */
 const DOLL = (() => {
@@ -48,7 +48,7 @@ const DOLL = (() => {
     };
     const O = new THREE.Vector3();
     // pelvis block: a short wide rounded block with the hip sockets at its lower corners
-    seg('pelvis', new THREE.Vector3(0, -15, -1), new THREE.Vector3(0, 20, 0), 21, 16.5, 0, 0, 0.72, 0.7);
+    seg('pelvis', new THREE.Vector3(0, -47, -1), new THREE.Vector3(0, -12, 0), 21, 16.5, 0, 0, 0.72, 0.7);
     ball('spine', 10.5, O);                                        // waist ball
     seg('spine', new THREE.Vector3(0, 4, 0), off('chest'), 15.5, 16.5, 4, 2, 0.74, 0.8);   // abdomen
     ball('chest', 9, O);                                           // ball under the ribcage
@@ -75,6 +75,8 @@ const DOLL = (() => {
       // wedge foot: low, longer toward the toes
       const foot = add('ankle' + s, new THREE.Mesh(segment(4.6, 3.2, 22, 0.9)), M.wood); foot.position.set(0, -5.5, -5); foot.rotation.x = Math.PI / 2 + 0.12; foot.scale.set(1.05, 1, 0.62);
     }
+    // the chest block moves with the upper body: picking it picks the waist joint
+    for (const m of parts) if (m.userData.joint === 'chest') m.userData.joint = 'spine';
     fig.dollParts = parts;
     return parts;
   }

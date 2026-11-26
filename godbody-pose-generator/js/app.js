@@ -3,7 +3,7 @@
   paper.setup(new paper.Size(10, 10));
   const $ = (id) => document.getElementById(id);
   const D2R = Math.PI / 180;
-  const NICE = { pelvis: 'Pelvis', spine: 'Waist', chest: 'Chest', neck: 'Neck', head: 'Head', shoulderL: 'Left Shoulder', elbowL: 'Left Elbow', wristL: 'Left Wrist', shoulderR: 'Right Shoulder', elbowR: 'Right Elbow', wristR: 'Right Wrist', hipL: 'Left Hip', kneeL: 'Left Knee', ankleL: 'Left Ankle', hipR: 'Right Hip', kneeR: 'Right Knee', ankleR: 'Right Ankle' };
+  const NICE = { pelvis: 'Lower Body', spine: 'Upper Body', neck: 'Neck', head: 'Head', shoulderL: 'Left Shoulder', elbowL: 'Left Elbow', wristL: 'Left Wrist', shoulderR: 'Right Shoulder', elbowR: 'Right Elbow', wristR: 'Right Wrist', hipL: 'Left Hip', kneeL: 'Left Knee', ankleL: 'Left Ankle', hipR: 'Right Hip', kneeR: 'Right Knee', ankleR: 'Right Ankle' };
 
   // ---------- 3D scene ----------
   const canvas = $('gl');
@@ -25,7 +25,7 @@
   const markerGeo = new THREE.SphereGeometry(1, 16, 12);
   const mk = { n: new THREE.MeshBasicMaterial({ color: 0x007aff, depthTest: false, transparent: true, opacity: 0.95 }), on: new THREE.MeshBasicMaterial({ color: 0xff9500, depthTest: false }) };
   // a dot at each joint end; dragging it turns the joint it hangs from
-  const HANDLES = [['pelvisTip', 'pelvis'], ['chest', 'spine'], ['neck', 'chest'], ['head', 'neck'], ['headTop', 'head'],
+  const HANDLES = [['pelvisTip', 'pelvis'], ['neck', 'spine'], ['head', 'neck'], ['headTop', 'head'],
     ['elbowL', 'shoulderL'], ['wristL', 'elbowL'], ['handL', 'wristL'], ['elbowR', 'shoulderR'], ['wristR', 'elbowR'], ['handR', 'wristR'],
     ['kneeL', 'hipL'], ['ankleL', 'kneeL'], ['toeL', 'ankleL'], ['kneeR', 'hipR'], ['ankleR', 'kneeR'], ['toeR', 'ankleR']];
 
@@ -33,7 +33,7 @@
     const pose = fig ? RIG3D.getPose(fig) : {};
     if (fig) scene.remove(fig.root);
     fig = RIG3D.build(style, bodyMat); for (const m of fig.meshes) m.visible = false; DOLL.dress(fig); scene.add(fig.root);
-    const pt = new THREE.Object3D(); pt.position.set(0, -27, 12); fig.objs.pelvis.add(pt); fig.tips.pelvisTip = pt;
+    const pt = new THREE.Object3D(); pt.position.set(0, -59, 12); fig.objs.pelvis.add(pt); fig.tips.pelvisTip = pt;
     // tip points
     markers.clear();
     for (const [h, j] of HANDLES) { const m = new THREE.Mesh(markerGeo, mk.n); m.renderOrder = 10; m.userData = { handle: h, joint: j }; markers.add(m); }
@@ -74,7 +74,7 @@
     const hit = e.button === 0 && !e.shiftKey ? pick(e) : null;
     if (hit && hit.marker) {
       const { joint, handle } = hit.marker.userData; select(joint); snap();
-      drag = { kind: 'joint', joint, handle };
+      drag = { kind: 'joint', joint, handle, from: AXES(joint).map(([, i, sg]) => sg * rel(joint, i)) };
     } else if (hit && hit.mesh) { select(hit.mesh.userData.joint); drag = { kind: 'orbit', x: e.clientX, y: e.clientY, moved: false }; }
     else drag = { kind: e.button === 2 || e.shiftKey ? 'pan' : 'orbit', x: e.clientX, y: e.clientY };
   });
@@ -103,7 +103,7 @@
     if (v1.lengthSq() < 1e-6 || v2.lengthSq() < 1) return;
     const q = new THREE.Quaternion().setFromUnitVectors(v1.normalize(), v2.normalize());
     const Qw = J.getWorldQuaternion(new THREE.Quaternion()), Qp = J.parent.getWorldQuaternion(new THREE.Quaternion());
-    J.quaternion.copy(Qp.invert().multiply(q.multiply(Qw)));
+    J.quaternion.copy(Qp.invert().multiply(q.multiply(Qw))); limit(d.joint, d.from);
     fig.root.updateMatrixWorld(true);
     syncJoint(); render3(); scheduleApply();
   }
@@ -127,22 +127,38 @@
   const setJ = (i, v) => { const o = fig.objs[selected], q = o.userData.restRot, r = o.rotation; const a = [r.x, r.y, r.z]; a[i] = (v + q[i]) * D2R; o.rotation.set(a[0], a[1], a[2], 'XYZ'); fig.root.updateMatrixWorld(true); };
   // what each kind of joint does, as a wooden mannequin moves: [label, Euler axis, sign]
   const side = (n) => (n.endsWith('L') ? 1 : -1);
+  // [label, Euler axis, sign, min, max]: the range a body can really reach, so a knee never folds forward
   const AXES = (n) => {
-    const k = n.replace(/[LR]$/, '');
-    if (k === 'shoulder' || k === 'hip') return [['Raise', 0, -1], ['Straddle', 2, side(n)], ['Turn', 1, side(n)]];
-    if (k === 'elbow') return [['Bend', 0, -1], ['Turn', 1, side(n)]];
-    if (k === 'knee') return [['Bend', 0, 1]];
-    if (k === 'ankle') return [['Point', 0, 1], ['Turn', 1, side(n)], ['Tilt', 2, side(n)]];
-    if (k === 'wrist') return [['Bend', 0, -1], ['Turn', 1, side(n)], ['Tilt', 2, side(n)]];
-    return [['Bend', 0, 1], ['Turn', 1, 1], ['Tilt', 2, 1]];
+    const k = n.replace(/[LR]$/, ''), sd = side(n);
+    if (k === 'shoulder') return [['Raise', 0, -1, -70, 180], ['Straddle', 2, sd, -35, 180], ['Turn', 1, sd, -90, 90]];
+    if (k === 'hip') return [['Raise', 0, -1, -40, 150], ['Straddle', 2, sd, -30, 95], ['Turn', 1, sd, -55, 55]];
+    if (k === 'elbow') return [['Bend', 0, -1, -5, 155], ['Turn', 1, sd, -90, 90]];
+    if (k === 'knee') return [['Bend', 0, 1, -5, 160]];
+    if (k === 'ankle') return [['Point', 0, 1, -35, 70], ['Turn', 1, sd, -30, 30], ['Tilt', 2, sd, -25, 25]];
+    if (k === 'wrist') return [['Bend', 0, -1, -80, 80], ['Turn', 1, sd, -70, 70], ['Tilt', 2, sd, -35, 35]];
+    if (k === 'spine') return [['Bend', 0, 1, -45, 95], ['Turn', 1, 1, -65, 65], ['Tilt', 2, 1, -45, 45]];
+    if (k === 'pelvis') return [['Bend', 0, -1, -50, 70], ['Turn', 1, 1, -55, 55], ['Tilt', 2, -1, -35, 35]];
+    if (k === 'neck') return [['Bend', 0, 1, -45, 55], ['Turn', 1, 1, -75, 75], ['Tilt', 2, 1, -40, 40]];
+    return [['Nod', 0, 1, -35, 45], ['Turn', 1, 1, -60, 60], ['Tilt', 2, 1, -35, 35]];
   };
+  // keep a joint inside its range, as a real body would
+  // a pose that already sits past a limit (a preset) may stay there, but is never pushed further out
+  function limit(n, from) {
+    const o = fig.objs[n], q = o.userData.restRot, a = o.rotation.toArray().slice(0, 3);
+    AXES(n).forEach(([, i, sg, lo, hi], k) => {
+      const f = from ? from[k] : 0; lo = Math.min(lo, f); hi = Math.max(hi, f);
+      let v = ((a[i] / D2R - q[i] + 540) % 360) - 180; v = Math.max(lo, Math.min(hi, v * sg)) * sg; a[i] = (v + q[i]) * D2R; });
+    // axes a joint does not have (a knee's twist) stay at rest
+    const used = new Set(AXES(n).map((x) => x[1])); for (let i = 0; i < 3; i++) if (!used.has(i)) a[i] = q[i] * D2R;
+    o.rotation.set(a[0], a[1], a[2], 'XYZ'); o.updateMatrixWorld(true);
+  }
   const rel = (n, i) => { const o = fig.objs[n], q = o.userData.restRot; return Math.round(((o.rotation.toArray()[i] / D2R - q[i] + 540) % 360) - 180); };
   const setRel = (n, i, v) => { const o = fig.objs[n], q = o.userData.restRot, r = o.rotation, a = [r.x, r.y, r.z]; a[i] = (v + q[i]) * D2R; o.rotation.set(a[0], a[1], a[2], 'XYZ'); fig.root.updateMatrixWorld(true); };
-  const jrows = [0, 1, 2].map((s) => { sliderRow($('gJoint'), 'j' + s, '', -180, 180, 1, deg, () => { const ax = AXES(selected)[s]; return ax ? ax[2] * rel(selected, ax[1]) : 0; }, (v) => { const ax = AXES(selected)[s]; if (ax) setRel(selected, ax[1], v * ax[2]); }); const row = $('s_j' + s).closest('.row'); return { row, lab: row.querySelector('label') }; });
+  const jrows = [0, 1, 2].map((s) => { sliderRow($('gJoint'), 'j' + s, '', -180, 180, 1, deg, () => { const ax = AXES(selected)[s]; return ax ? ax[2] * rel(selected, ax[1]) : 0; }, (v) => { const ax = AXES(selected)[s]; if (ax) setRel(selected, ax[1], v * ax[2]); }); const row = $('s_j' + s).closest('.row'); return { row, lab: row.querySelector('label'), inp: $('s_j' + s) }; });
   // the torso's three axes, always at hand
-  for (const [n, title] of [['pelvis', 'Pelvis'], ['spine', 'Waist'], ['chest', 'Chest']]) {
+  for (const [n, title] of [['spine', 'Upper Body'], ['pelvis', 'Lower Body']]) {
     const h = document.createElement('div'); h.className = 'subhead'; h.textContent = title; $('gTorso').appendChild(h);
-    for (const [l, i] of [['Bend', 0], ['Turn', 1], ['Tilt', 2]]) sliderRow($('gTorso'), 't_' + n + i, l, -90, 90, 1, deg, () => rel(n, i), (v) => setRel(n, i, v));
+    AXES(n).forEach(([l, i, sg, lo, hi]) => sliderRow($('gTorso'), 't_' + n + i, l, lo, hi, 1, deg, () => sg * rel(n, i), (v) => setRel(n, i, v * sg)));
   }
   const rootA = (i) => () => { const o = fig.objs.root; return Math.round(((o.rotation.toArray()[i] / D2R + 540) % 360) - 180); };
   const setRoot = (i) => (v) => { const o = fig.objs.root, r = o.rotation, a = [r.x, r.y, r.z]; a[i] = v * D2R; o.rotation.set(a[0], a[1], a[2], 'XYZ'); };
@@ -166,16 +182,22 @@
     $('views').appendChild(b);
   }
   const jsel = $('jsel');
-  for (const n of MANNEQUIN.JOINT_NAMES) if (n !== 'root') { const o = document.createElement('option'); o.value = n; o.textContent = NICE[n]; jsel.appendChild(o); }
+  for (const n of MANNEQUIN.JOINT_NAMES) if (n !== 'root' && n !== 'chest') { const o = document.createElement('option'); o.value = n; o.textContent = NICE[n]; jsel.appendChild(o); }
   jsel.addEventListener('change', () => select(jsel.value));
   function select(n) {
     selected = n; jsel.value = n; $('jtitle').textContent = NICE[n] || 'Joint';
-    const ax = AXES(n); jrows.forEach((r, i) => { r.row.hidden = !ax[i]; if (ax[i]) r.lab.textContent = ax[i][0]; });
+    const ax = AXES(n); jrows.forEach((r, i) => { r.row.hidden = !ax[i]; if (ax[i]) { r.lab.textContent = ax[i][0]; } });
     highlight(); syncJoint(); render3();
   }
-  function syncJoint() { for (const k in ui) if (/^(j\d|t_)/.test(k)) ui[k](); }
+  // slider ends follow the joint's range, opened just enough to hold a preset that goes past it
+  function ranges() {
+    const fit = (inp, n, [, i, sg, lo, hi]) => { const v = Math.round(sg * rel(n, i)); inp.min = Math.min(lo, v); inp.max = Math.max(hi, v); };
+    AXES(selected).forEach((ax, k) => fit(jrows[k].inp, selected, ax));
+    for (const n of ['spine', 'pelvis']) AXES(n).forEach((ax) => fit($('s_t_' + n + ax[1]), n, ax));
+  }
+  function syncJoint() { ranges(); for (const k in ui) if (/^(j\d|t_)/.test(k)) ui[k](); }
   function syncView() { ui.fov(); ui.pitch(); }
-  function syncAll() { for (const k in ui) ui[k](); }
+  function syncAll() { ranges(); for (const k in ui) ui[k](); }
 
   // ---------- undo, reset, mirror ----------
   const hist = [];
