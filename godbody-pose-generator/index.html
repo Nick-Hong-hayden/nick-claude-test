@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GODBODY Pose Generator</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.17/paper-core.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <main class="main">
+    <header class="titlebar">
+      <h1>GODBODY Pose Generator</h1>
+      <p>Pose the wooden mannequin, frame the view, then Apply: the pose is redrawn as a GODBODY cut-paper vector, in the brand drawings' own proportions.</p>
+    </header>
+    <div class="panes" id="panes">
+      <section class="pane">
+        <div class="ptitle"><span>Pose</span><span class="hint">Drag a dot to bend a joint · drag empty space to orbit · right-drag or Shift to pan · scroll to zoom</span></div>
+        <div class="view" id="view"><canvas id="gl"></canvas></div>
+      </section>
+      <section class="pane">
+        <div class="ptitle"><span>Result</span><span class="hint" id="rinfo"></span></div>
+        <div class="view result" id="resultBox"><svg id="result" xmlns="http://www.w3.org/2000/svg"><rect id="rbg" x="-9999" y="-9999" width="19998" height="19998"/><path id="rpath" fill-rule="evenodd"/></svg></div>
+      </section>
+    </div>
+    <div class="transport">
+      <div class="seg" id="presetSeg" role="group" aria-label="Brand poses"></div>
+      <span class="spacer"></span>
+      <button class="btn" id="undo" type="button">Undo</button>
+      <button class="btn" id="copy" type="button">Copy SVG</button>
+      <button class="btn" id="export" type="button">Export SVG</button>
+      <button class="btn prim" id="apply" type="button">Apply</button>
+    </div>
+    <p class="msg" id="msg"></p>
+  </main>
+
+  <aside class="side" aria-label="Inspector">
+    <section class="group">
+      <h2 id="jtitle">Joint</h2>
+      <div class="list" id="gJoint"></div>
+      <div class="list" style="margin-top:10px">
+        <div class="row sel"><label for="jsel">Joint</label><select id="jsel"></select></div>
+      </div>
+      <p class="gfoot">Click a wooden part or a dot to pick a joint. Each joint moves as on a wooden artist's mannequin: a shoulder or hip raises, straddles and turns; a knee only bends. 0° is the standing pose.</p>
+    </section>
+    <section class="group">
+      <h2>Torso</h2>
+      <div class="list" id="gTorso"></div>
+      <p class="gfoot">Three axes, one above the other: the pelvis carries the legs, the waist and chest carry the upper body. Turn the chest against the pelvis for the twist of the brand symbol.</p>
+    </section>
+    <section class="group">
+      <h2>Whole Body</h2>
+      <div class="list" id="gBody"></div>
+      <div class="krow" style="margin-top:10px"><button class="btn" id="resetPose" type="button">Reset Pose</button><button class="btn" id="mirror" type="button">Mirror Pose</button></div>
+    </section>
+    <section class="group">
+      <h2>View</h2>
+      <div class="krow" id="views"></div>
+      <div class="list" style="margin-top:10px" id="gView"></div>
+    </section>
+    <section class="group">
+      <h2>Character</h2>
+      <div class="list" id="gStyle"></div>
+      <p class="gfoot">Measured from the brand drawings. Each brand pose loads its own exaggeration, the way the drawings stretch a thigh or a shin; change them freely.</p>
+    </section>
+    <section class="group">
+      <h2>Drawing</h2>
+      <div class="list" id="gDraw"></div>
+      <div class="list" style="margin-top:10px">
+        <div class="row sw"><label for="live">Apply Automatically</label><input type="checkbox" class="switch" id="live" checked></div>
+        <div class="row colors"><span>Colors</span><input type="color" id="cFig" value="#ffffff" aria-label="Figure color"><input type="color" id="cBg" value="#383838" aria-label="Background color"></div>
+        <div class="row sw"><label for="expBg">Include Background</label><input type="checkbox" class="switch" id="expBg"></div>
+      </div>
+      <p class="gfoot">Negative Space is the slit left where one part passes in front of another; it tapers away at the joint two parts share. Fillet softens the armpit and hip joins. Curve Smoothness trades detail for long, calm curves; fingertips, toes and slit ends stay pointed.</p>
+    </section>
+  </aside>
+</div>
+<script src="js/assets.js"></script>
+<script src="js/mannequin.js"></script>
+<script src="js/rig3d.js"></script>
+<script src="js/doll.js"></script>
+<script src="js/style2d.js"></script>
+<script src="js/presets.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
