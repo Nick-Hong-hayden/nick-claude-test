@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generators</title>
+<style>
+:root { --bg: #f5f5f7; --card: #ffffff; --label: #1d1d1f; --label2: #6e6e73; --sep: rgba(0,0,0,.08); --tint: #0071e3; --tile: #1d1d1f; }
+@media (prefers-color-scheme: dark) { :root { --bg: #000; --card: #1c1c1e; --label: #f5f5f7; --label2: #98989d; --sep: rgba(255,255,255,.1); --tint: #2997ff; --tile: #2c2c2e; } }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--label); font: 15px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Pretendard", "Helvetica Neue", sans-serif; -webkit-font-smoothing: antialiased; display: flex; justify-content: center; }
+main { width: 100%; max-width: 560px; padding: 64px 20px 48px; }
+header { text-align: center; margin-bottom: 36px; }
+.mark { width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 16px; background: var(--tile); display: grid; place-items: center; }
+h1 { font-size: 28px; line-height: 1.15; letter-spacing: -.02em; margin: 0 0 8px; font-weight: 700; }
+header p { margin: 0; color: var(--label2); }
+ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+a.card { display: grid; grid-template-columns: 76px 1fr 16px; gap: 16px; align-items: center; padding: 14px 18px 14px 14px; background: var(--card); border-radius: 18px; color: inherit; text-decoration: none; box-shadow: 0 0 0 .5px var(--sep), 0 1px 2px rgba(0,0,0,.04); transition: transform .15s ease, box-shadow .15s ease; }
+a.card:hover { transform: translateY(-1px); box-shadow: 0 0 0 .5px var(--sep), 0 6px 18px rgba(0,0,0,.08); }
+a.card:active { transform: scale(.99); }
+a.card:focus-visible { outline: 3px solid var(--tint); outline-offset: 2px; }
+.thumb { width: 76px; height: 76px; border-radius: 14px; background: var(--tile); display: grid; place-items: center; overflow: hidden; }
+.thumb svg { width: 56px; height: 56px; }
+.title { font-weight: 600; font-size: 17px; letter-spacing: -.01em; }
+.desc { color: var(--label2); font-size: 13.5px; margin-top: 2px; }
+.chev { color: var(--label2); }
+footer { text-align: center; color: var(--label2); font-size: 12px; margin-top: 32px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="mark" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 34 34" fill="#fff"><circle cx="9" cy="9" r="6"/><rect x="19" y="3" width="12" height="12" rx="2"/><path d="M9 19l6.5 12h-13z"/><rect x="19" y="19" width="12" height="12" rx="6"/></svg></div>
+    <h1>Generators</h1>
+    <p>그래픽 제네레이터 모음</p>
+  </header>
+  <ul>
+    <li><a class="card" href="../">
+      <span class="thumb" aria-hidden="true"><svg viewBox="0 0 56 56"><circle cx="18" cy="20" r="11" fill="#ff9f0a"/><rect x="28" y="10" width="18" height="18" rx="3" fill="#0a84ff" transform="rotate(14 37 19)"/><path d="M28 50l10-17 10 17z" fill="#30d158"/><circle cx="14" cy="42" r="6" fill="#fff"/></svg></span>
+      <span><span class="title">Shape Motion Generator</span><span class="desc" style="display:block">도형·SVG·카피를 섞어 루프 모션을 만들고 영상으로 내보내요.</span></span>
+      <svg class="chev" width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 2l6 6-6 6"/></svg>
+    </a></li>
+    <li><a class="card" href="../godbody-pose-generator/">
+      <span class="thumb" aria-hidden="true"><svg viewBox="8 92 248 228" fill="#fff"><path d="M220.392 255.4C203.667 255.128 187.646 259.229 173.417 267.427C168.291 270.319 163.86 273.716 159.198 277.679C161.472 269.033 162.316 260.773 161.781 252.158L160.541 241.891C159.326 235.258 157.551 228.917 155.461 222.51C160.999 215.913 165.25 206.397 159.455 199.496C159.213 199.208 157.726 198.971 156.882 198.626C153.691 197.329 152.178 195.451 150.073 192.718C146.558 188.148 144.788 182.791 145.117 177.058C145.189 175.766 144.839 174.722 143.589 174.377C138.993 173.116 130.193 173.152 126.714 173.116C113.817 172.982 102.568 180.007 94.3591 189.61C91.0346 193.5 88.1527 197.468 85.2605 201.698L75.9714 215.295C74.3091 217.724 72.4307 219.808 70.4339 221.934L66.7492 225.85C57.7895 235.381 48.9121 244.861 41.9131 256.018C39.1289 260.459 37.0241 265.708 38.3724 270.798C40.0501 277.123 38.5577 284.467 32.8401 287.822C31.3271 291.471 27.6218 296.658 24.7759 294.378C23.5047 293.365 23.0158 291.713 22.6556 290.148C21.719 286.098 21.8682 282.089 22.4189 277.967C23.0107 273.536 24.5855 269.645 25.9492 265.42C28.3371 258.025 30.6632 250.861 33.7202 243.687C42.4483 223.195 53.9555 209.65 69.1834 193.948L77.4741 185.4L84.3136 178.339L98.0748 163.883L105.151 156.812C108.779 153.179 112.917 150.266 117.584 148.084C127.45 143.483 136.008 144.441 146.059 147.528C152.291 149.443 157.643 149.427 161.333 145.038C160.757 145.007 160.186 144.94 159.604 144.832C137.46 140.776 152.09 108.123 164.689 103.347C191.125 93.3274 191.146 117.706 180.838 132.769C178.393 136.34 177.462 140.73 178.311 144.976C179.371 148.717 181.152 152.021 183.73 154.903C186.427 157.631 189.623 159.385 193.189 160.785L200.888 163.801C204.748 165.314 207.516 168.381 208.998 172.277C212.066 180.326 209.456 189.723 205.519 197.268C202.787 202.512 199.735 207.308 196.112 212.156C195.103 204.761 196.627 197.304 198.006 190.222L195.443 196.223C193.364 201.091 192.165 206.129 191.954 211.461C191.707 217.657 193.565 223.575 197.62 228.197C199.617 230.477 201.933 232.123 204.305 233.95L211.33 239.364C215.267 242.396 220.125 250.166 220.382 255.405L220.392 255.4Z"/><path d="M58.0779 303.483C56.8376 304.996 54.9386 305.84 53.1065 305.948L48.0323 306.246C39.1909 306.761 38.1205 310.049 32.3618 311.253C27.6992 312.226 23.0212 312.494 18.2917 312.128C16.7067 312.005 15.2091 311.176 14.4166 309.869C13.5263 308.408 14.1335 306.57 15.5693 305.629L26.7163 298.316C28.9137 296.875 30.787 295.331 32.5625 293.432L36.9162 288.785L40.951 285.018C51.1664 275.481 57.3214 267.798 63.8057 255.267L72.9867 235.983L80.5209 219.855C85.2453 209.737 93.8808 196.388 101.966 188.715C107.673 183.301 115.042 178.427 123.029 178.113C131.994 177.758 137.532 183.517 141.047 191.272C143.167 195.95 144.798 200.587 146.306 205.548C149.929 217.431 152.909 229.309 155.055 241.557C157.592 256.013 157.602 271.395 151.314 284.786C148.982 289.752 145.936 294.111 141.798 297.698C134.645 303.899 125.098 306.539 115.799 304.419C109.006 302.87 103.401 298.671 99.48 292.999C94.8483 286.299 93.1346 278.255 94.2719 270.206L101.137 263.341C105.846 258.632 109.809 253.399 112.644 247.233L107.23 253.656C102.244 258.792 96.9377 263.382 90.8547 267.206L77.9838 275.291C73.3367 278.209 68.8851 281.122 64.6394 284.57C60.2085 288.172 57.7279 291.826 59.1689 297.487C59.6784 299.479 59.4417 301.831 58.083 303.488L58.0779 303.483Z"/><path d="M215.385 311.603C198.093 313.183 171.435 313.857 154.483 311.258L145.369 309.179C144.273 308.927 143.264 308.335 142.307 307.728C141.37 307.131 141.015 305.67 141.726 304.661C143.552 302.067 146.275 300.415 148.39 297.544C151.622 293.164 154.859 289.016 158.59 285.11C165.429 277.952 175.882 271.972 184.414 267.566C196.024 261.571 209.364 259.229 221.818 262.847C231.019 265.523 240.452 271.807 245.269 281.091C249.386 289.016 248.12 297.559 241.543 303.132C238.255 305.922 234.488 307.62 230.453 308.793C225.477 310.239 220.577 311.13 215.38 311.603H215.385Z"/></svg></span>
+      <span><span class="title">GODBODY Pose Generator</span><span class="desc" style="display:block">목각 인형으로 포즈를 잡아 GODBODY 그림체 SVG로 뽑아요.</span></span>
+      <svg class="chev" width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 2l6 6-6 6"/></svg>
+    </a></li>
+    <li><a class="card" href="../stopmotion-generator/">
+      <span class="thumb" aria-hidden="true"><svg viewBox="0 0 56 56" fill="none"><rect x="3" y="14" width="50" height="28" rx="4" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><g fill="#fff"><circle cx="13" cy="28" r="5"/><ellipse cx="28" cy="28" rx="6" ry="4.5" opacity=".75"/><rect x="38" y="23" width="10" height="10" rx="2" opacity=".5"/></g><g fill="#fff" opacity=".35"><rect x="7" y="8" width="4" height="3" rx="1"/><rect x="17" y="8" width="4" height="3" rx="1"/><rect x="27" y="8" width="4" height="3" rx="1"/><rect x="37" y="8" width="4" height="3" rx="1"/><rect x="47" y="8" width="4" height="3" rx="1"/><rect x="7" y="45" width="4" height="3" rx="1"/><rect x="17" y="45" width="4" height="3" rx="1"/><rect x="27" y="45" width="4" height="3" rx="1"/><rect x="37" y="45" width="4" height="3" rx="1"/><rect x="47" y="45" width="4" height="3" rx="1"/></g></svg></span>
+      <span><span class="title">SVG Stop-Motion Generator</span><span class="desc" style="display:block">처음·중간·끝 SVG 사이를 계산해 점토·스탬프 질감의 스톱모션 영상을 만들어요.</span></span>
+      <svg class="chev" width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 2l6 6-6 6"/></svg>
+    </a></li>
+  </ul>
+  <footer>Chrome에서 가장 잘 동작해요.</footer>
+</main>
+</body>
+</html>

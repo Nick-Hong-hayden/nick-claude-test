@@ -25,3 +25,5 @@
 
 ## 함께 있는 도구
 - [`godbody-pose-generator/`](godbody-pose-generator/) — 목각 인형으로 포즈를 잡아 GODBODY 그림체 SVG로 내보내는 생성기
+- [`stopmotion-generator/`](stopmotion-generator/) — 처음·중간·끝 SVG 사이를 계산해 스톱모션 영상으로 만드는 생성기
+- [`links/`](links/) — 모든 제네레이터로 이동하는 링크 페이지
